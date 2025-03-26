@@ -1,14 +1,19 @@
 const jwt = require("jsonwebtoken");
 
-module.exports = (req, res, next) => {
-    const token = req.header("Authorization");
-    if (!token) return res.status(401).json({ error: "Access denied" });
+const authMiddleware = (req, res, next) => {
+  const authHeader = req.header("Authorization");
+  const token = authHeader && authHeader.split(" ")[1];
 
-    try {
-        const decoded = jwt.verify(token.replace("Bearer ", ""), process.env.JWT_SECRET);
-        req.user = decoded;
-        next();
-    } catch (error) {
-        res.status(400).json({ error: "Invalid token" });
-    }
+  if (!token) return res.status(401).json({ error: "Access Denied" });
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch (error) {
+    res.status(403).json({ error: "Invalid token" });
+  }
 };
+
+// Ensure it's exported as a function, not an object
+module.exports = authMiddleware;
